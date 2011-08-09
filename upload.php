@@ -4,10 +4,67 @@ include("header.php");
 include("language.php");
 
 // Read username/password from form
-if($_POST['stage'] == 'login')
+if($_POST['stage'] == 'login') {
   $httpDigest = base64_encode($_POST['username'] . ':' . $_POST['password']);
-else
+  // Get SWORD service document
+  $url = parse_url("http://cnx.org/sword");
+  $host = 'cnx.org';
+  $port = 80;
+  $path = '/sword';
+
+  $connection = fsockopen($host, $port, $errno, $errstr, 60);
+  if($connection) {
+    fputs($connection, "GET $path HTTP/1.1\r\n");
+    fputs($connection, "Host: $host\r\n");
+    fputs($connection, "Accept: */*\r\n");
+    fputs($connection, "Authorization: Basic $httpDigest\r\n");
+    fputs($connection, "Connection: close\r\n");
+    fputs($connection, "\r\n");
+ 
+    $response = ''; 
+    while(!feof($connection)) {
+      // receive the results of the request
+      $response .= fgets($connection, 128);
+    }
+  }
+  fclose($connection);
+  
+  // Read available collections from the service document
+  $pos = 0;
+  $swordCollections = array();
+  while(true) {
+    // Get url
+    $substr = '<collection href="';
+    $pos0 = stripos($response, $substr, $pos);
+    if($pos0 === FALSE)
+      break;
+    $pos0 += strlen($substr);
+    $pos1 = stripos($response, '">', $pos0);
+    $url = substr($response, $pos0, $pos1-$pos0);
+    $pos = $pos1;
+    // Get collection entity extent
+    $posCollectionEnd = stripos($response, '</collection>', $pos);
+    // Get title
+    $substr = '<atom:title>';
+    $pos0 = stripos($response, $substr, $pos);
+    if(($pos0 === FALSE) || ($pos0 > $posCollectionEnd))
+      break;
+    $pos0 += strlen($substr);
+    $pos1 = stripos($response, '</atom:title>', $pos0);
+    $title = substr($response, $pos0, $pos1-$pos0);
+    $pos = $pos1;
+    // Check that it accepts zip files
+    $pos0 = stripos($response, '<accept>application/zip</accept>', $pos);
+    if(($pos0 === FALSE) || ($pos0 > $posCollectionEnd))
+      break;
+    // Store
+    $swordCollections[] = $url;
+    $swordCollections[] = $title;
+  }
+} else {
   $httpDigest = $_POST['cred'];
+  $swordCollections = $_POST['collections'];
+}
 
 $formFields = array(
   "url" => null,
@@ -169,6 +226,10 @@ if($_POST['stage'] == 'upload') {
     <input type="hidden" name="stage" value="upload"/>
     <input type="hidden" name="cred" value="<?php echo $httpDigest; ?>"/>
     <input type="hidden" name="MAX_FILE_SIZE" value="2000000"/>
+<?php
+  for($i = 0; $i < count($swordCollections); $i++)
+    echo '    <input type="hidden" name="collections[]" value="' . htmlspecialchars($swordCollections[$i]) . '"/>' . "\n";
+?>
     <table cellpadding="4">
       <tr>
         <td></td>
@@ -176,9 +237,18 @@ if($_POST['stage'] == 'upload') {
         <td align="center">Remember?</td>
       </tr>
       <tr>
-        <td>URL:</td>
-        <td><input type="text" name="url" size="50" value="<?php echo ($formFields["keepUrl"] and isset($formFields["url"]))?$formFields["url"]:"";?>" tabindex="1"/></td>
-	<td align="center"><input type="checkbox" name="keepUrl" <?php echo $formFields["keepUrl"]?"checked":"";?>/></td>
+        <td>Deposit location:</td>
+        <td><select name="url" tabindex="1">
+<?php
+  for($i = 0; $i < count($swordCollections); $i+=2) {
+    echo '<option value="' . $swordCollections[$i] . '"';
+    if(isset($formFields['url']) and ($swordCollections[$i] == $formFields['url']))
+      echo ' selected="selected"';
+    echo  '>' . htmlentities($swordCollections[$i+1]) . '</option>' . "\n";
+  }
+?>
+        </select></td>
+	<td align="center"><input type="checkbox" disabled="disabled" checked="checked"/></td>
       </tr>
       <tr>
         <td>Title:</td>
@@ -209,7 +279,7 @@ foreach($languageOptions as $opt) {
 }
 ?>
         </select></td>
-	<td align="center"></td>
+	<td align="center"><input type="checkbox" disabled="disabled" checked="checked"/></td>
       </tr>
       <tr>
         <td>Files:</td>
