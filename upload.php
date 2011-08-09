@@ -7,7 +7,6 @@ include("language.php");
 if($_POST['stage'] == 'login') {
   $httpDigest = base64_encode($_POST['username'] . ':' . $_POST['password']);
   // Get SWORD service document
-  $url = parse_url("http://cnx.org/sword");
   $host = 'cnx.org';
   $port = 80;
   $path = '/sword';
@@ -94,11 +93,11 @@ if($_POST['stage'] == 'upload') {
   $formFields['keepAbstract'] = isset($_POST['keepAbstract']);
   $formFields['keepKeywords'] = isset($_POST['keepKeywords']);
 
-  $url = $formFields['url']; //"http://localhost:8080/Members/user1/sword";
-  $title = $formFields['title']; //"TITLE";
-  $abstract = $formFields['abstract']; //"ABSTRACT LINE 1\nABSTRACT LINE 2";
-  $language = $formFields['language']; //"af";
-  $keywords = $formFields['keywords']; //"KEYWORD1\nKEYWORD2\nKEYWORD3\n";
+  $url = $formFields['url'];
+  $title = $formFields['title'];
+  $abstract = $formFields['abstract'];
+  $language = $formFields['language'];
+  $keywords = $formFields['keywords'];
 
   $keywordArray = explode("\n", trim($keywords));
   $newKeywordArray = array();
@@ -222,6 +221,7 @@ if($_POST['stage'] == 'upload') {
 
 ?>
   <p>Please enter the title, etc. below and select the file or files to upload.</p>
+
   <form enctype="multipart/form-data" action="upload.php" method="POST">
     <input type="hidden" name="stage" value="upload"/>
     <input type="hidden" name="cred" value="<?php echo $httpDigest; ?>"/>
@@ -252,7 +252,7 @@ if($_POST['stage'] == 'upload') {
       </tr>
       <tr>
         <td>Title:</td>
-        <td><input type="text" name="title" size="50" value="<?php echo ($formFields["keepTitle"] and isset($formFields["title"]))?$formFields["title"]:"";?>" tabindex="2"/></td>
+        <td><input type="text" name="title" size="50" value="<?php echo ($formFields["keepTitle"] and isset($formFields["title"]))?htmlspecialchars($formFields["title"]):"";?>" tabindex="2"/></td>
 	<td align="center"><input type="checkbox" name="keepTitle" <?php echo $formFields["keepTitle"]?"checked":"";?>/></td>
       </tr>
       <tr>
@@ -301,4 +301,7 @@ foreach($languageOptions as $opt) {
       </tr>
     </table>
   </form>
+
+  <p>All uploaded files will be placed in the same module.</p>
+
 <?php
