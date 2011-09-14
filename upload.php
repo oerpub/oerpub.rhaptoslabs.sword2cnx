@@ -20,7 +20,7 @@ if($_POST['stage'] == 'login') {
     fputs($connection, "Connection: close\r\n");
     fputs($connection, "\r\n");
  
-    $response = ''; 
+    $response = '';
     while(!feof($connection)) {
       // receive the results of the request
       $response .= fgets($connection, 128);
