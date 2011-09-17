@@ -106,27 +106,33 @@ def create_mets(title, summary, language, keywords):
 </mets>
 """
 
-def upload_multipart(connection, title, summary, language, keywords, files):
+def upload_multipart(connection, title, summary, language, keywords, files, unicodeEncoding='utf8'):
     # Create and zip METS file
-    import zipfile, os
+    import zipfile
     from StringIO import StringIO
 
-    zipFilename = os.tmpnam() # TODO: replace file with StringIO object
-    zipFile = open(zipFilename, "wb")
+    zipFile = StringIO('')
     zipArchive = zipfile.ZipFile(zipFile, "w")
-    zipArchive.writestr('mets.xml', create_mets(title, summary, language, keywords))
+    mets = create_mets(title, summary, language, keywords)
+    if isinstance(mets, unicode):
+        mets = mets.encode(unicodeEncoding)
+    zipArchive.writestr('mets.xml', mets)
 
     # Zip uploaded files
     for filename in files:
-        zipArchive.writestr(os.path.basename(filename), files[filename].read())
+        zipArchive.writestr(filename, files[filename].read())
     zipArchive.close()
 
     # Send zip file to SWORD interface
-    #print 'Posting new module to Connexions...'
+    zipFile.seek(0)
+    response = connection.create(payload = zipFile.read(),
+                                 mimetype = "application/zip")
+    """
     with open(zipFilename, "rb") as zipFile:
         response = connection.create(payload = zipFile.read(),
                                      mimetype = "application/zip")
+    os.unlink(zipFilename)
+    """
 
     # Clean-up
-    os.unlink(zipFilename)
     return response

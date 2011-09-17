@@ -4,6 +4,7 @@ Connexions.
 """
 from __future__ import division
 import sword1cnx
+import os
 
 PARAMS = {
     'username': raw_input("Enter Connexions username: "),
@@ -56,7 +57,7 @@ conn = sword1cnx.Connection(formFields['url'],
                             download_service_document=False)
 response = sword1cnx.upload_multipart(
     conn, formFields['title'], formFields['abstract'], formFields['language'],
-    ",".split(formFields['keywords']), [{filename: open(filename,'rb')} for filename in filenames])
+    ",".split(formFields['keywords']), [{os.path.basename(filename): open(filename,'rb')} for filename in filenames])
 
 print 'Response:'
 print response
