@@ -56,7 +56,7 @@ conn = sword1cnx.Connection(formFields['url'],
                             download_service_document=False)
 response = sword1cnx.upload_multipart(
     conn, formFields['title'], formFields['abstract'], formFields['language'],
-    ",".split(formFields['keywords']), filenames)
+    ",".split(formFields['keywords']), [{filename: open(filename,'rb')} for filename in filenames])
 
 print 'Response:'
 print response

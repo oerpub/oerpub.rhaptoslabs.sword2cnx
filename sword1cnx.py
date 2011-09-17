@@ -106,18 +106,19 @@ def create_mets(title, summary, language, keywords):
 </mets>
 """
 
-def upload_multipart(connection, title, summary, language, keywords, filenames):
+def upload_multipart(connection, title, summary, language, keywords, files):
     # Create and zip METS file
     import zipfile, os
+    from StringIO import StringIO
 
-    zipFilename = os.tmpnam()
+    zipFilename = os.tmpnam() # TODO: replace file with StringIO object
     zipFile = open(zipFilename, "wb")
     zipArchive = zipfile.ZipFile(zipFile, "w")
     zipArchive.writestr('mets.xml', create_mets(title, summary, language, keywords))
 
     # Zip uploaded files
-    for filename in filenames:
-        zipArchive.write(filename, os.path.basename(filename))
+    for filename in files:
+        zipArchive.writestr(os.path.basename(filename), files[filename].read())
     zipArchive.close()
 
     # Send zip file to SWORD interface
