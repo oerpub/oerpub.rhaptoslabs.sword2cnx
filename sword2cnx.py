@@ -70,13 +70,11 @@ class MetaData(Entry):
         Any of the default namespaces can be overwritten by supplying
         them in the input dictionary.
 
-        Note that the notation for specifying the prefix of a metadata
-        entry is non-standard. Colons (:) should be replaced by
-        underscores (_). This makes it possible to access namespaced
-        fields as object attributes in Python. E.g.
+        Entries in the metadata can be specified with a namespace
+        prefix.
 
           metadata = {'title': 'Great Expectations',
-                      'dcterms_author': 'Charles Dickens'}
+                      'dcterms:author': 'Charles Dickens'}
         """
 
         # Combine default and user-specified namespace dictionaries
@@ -104,20 +102,15 @@ class MetaData(Entry):
             self.add_ns.append(prefix)
             NS[prefix] = "{%s}%%s"%url
 
-        # Mangle keys of metadata entries with prefixes (':' -> '_')
-        newMetadata = {}
-        for k, v in metadata.iteritems():
-            newMetadata[k.replace(':','_')] = v
-
         # Record metadata
-        self.add_fields(**newMetadata)
+        self.add_fields(**metadata)
     
     # Overload add_field method to handle attributes
     def add_field(self, key, value, attributes={}):
         """
         Append a single key-value pair to the metadata, e.g.
         
-          e.add_field("myprefix_foo", "value")
+          e.add_field("myprefix:foo", "value")
         
         You can use MetaData.add_fields method instead for a neater
         interface that does not allow for attributes.
@@ -125,8 +118,8 @@ class MetaData(Entry):
         The optional attributes argument is used to supply key-value
         pairs for the attributes of the new element, e.g.
         
-          e.add_field("myprefix_foo", "value",
-                      {"otherprefix_attribname": "attribvalue"})
+          e.add_field("myprefix:foo", "value",
+                      {"otherprefix:attribname": "attribvalue"})
 
         Note that the atom:author field is handled differently, as it
         requires certain fields from the author. This means of entry
@@ -138,11 +131,15 @@ class MetaData(Entry):
         """
         from sword2.compatible_libs import etree
 
-        # Unmangle attribute key namespace
-        oldAttributes = attributes
-        attributes = {}
-        for k, v in oldAttributes.iteritems():
-            attributes[k.replace('_', ':')] = v
+        namespacedAttributes = {}
+        for k, v in attributes.iteritems():
+            if ":" in k: # XML namespace, eg 'dcterms:title'
+                nmsp, tag = k.split(":", 1)
+                if nmsp in self.add_ns:
+                    namespacedAttributes[NS[nmsp] % tag] = v
+                    continue
+            namespacedAttributes[k] = v
+        attributes = namespacedAttributes
 
         if key in self.atom_fields:
             # These should be unique!
@@ -152,9 +149,9 @@ class MetaData(Entry):
                 e.text = value
             else:
                 old_e.text = value
-        elif "_" in key:
-            # possible XML namespace, eg 'dcterms_title'
-            nmsp, tag = key.split("_", 1)
+        elif ":" in key:
+            # possible XML namespace, eg 'dcterms:title'
+            nmsp, tag = key.split(":", 1)
             if nmsp in self.add_ns:
                 e = etree.SubElement(self.entry, NS[nmsp] % tag, attrib=attributes)
                 e.text = value
@@ -166,8 +163,8 @@ class MetaData(Entry):
         """
         Add in multiple elements in one method call, e.g.
         
-          e.add_fields(dcterms_title="Origin of the Species",
-                       dcterms_contributor="Darwin, Charles")
+          e.add_fields(dcterms:title="Origin of the Species",
+                       dcterms:contributor="Darwin, Charles")
 
         If a value is not a string and is iterable, it will result in
         multiple entries. So this
@@ -176,8 +173,8 @@ class MetaData(Entry):
 
         is equivalent to this
 
-          e.add_fields(dcterms_subject="cats")
-          e.add_fields(dcterms_subject="dogs")
+          e.add_fields(dcterms:subject="cats")
+          e.add_fields(dcterms:subject="dogs")
         """
         for key, value in kw.iteritems():
             if isinstance(value, basestring):
