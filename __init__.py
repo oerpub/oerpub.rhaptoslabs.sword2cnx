@@ -1,1 +1,1 @@
-from sword1cnx import *
+from sword2cnx import *

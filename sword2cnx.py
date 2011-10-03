@@ -1,6 +1,32 @@
 """
 Library for interacting with Connexions through its SWORD version 2
 API.
+
+Author: Carl Scheffler
+Copyright (C) 2011 Katherine Fletcher.
+
+Funding was provided by The Shuttleworth Foundation as part of the OER
+Roadmap Project.
+
+If the license this software is distributed under is not suitable for
+your purposes, you may contact the copyright holder through
+oer-roadmap-discuss@googlegroups.com to discuss different licensing
+terms.
+
+This file is part of oerpub.rhaptoslabs.sword2cnx
+
+Sword2Cnx is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Sword2Cnx is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with Sword1Cnx.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import division
 from sword2 import *
