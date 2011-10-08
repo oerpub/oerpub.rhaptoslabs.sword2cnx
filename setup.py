@@ -25,6 +25,7 @@ setup(name='oerpub.rhaptoslabs.sword2cnx',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
+          'sword2',
       ],
       entry_points="""
       # -*- Entry points: -*-
