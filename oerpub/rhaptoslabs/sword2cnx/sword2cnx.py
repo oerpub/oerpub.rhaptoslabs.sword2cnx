@@ -30,6 +30,7 @@ License along with Sword1Cnx.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import division
 from sword2 import *
+import sword2
 from sword2.compatible_libs import etree
 
 class Sword2CnxException(Exception):
@@ -38,6 +39,12 @@ class Sword2CnxException(Exception):
 
     def __str__(self):
         return message
+
+class Connection(sword2.Connection):
+    def __init__(self, *args, **kwargs):
+        if not kwargs.has_key('always_authenticate'):
+            kwargs['always_authenticate'] = True
+        sword2.Connection.__init__(self, *args, **kwargs)
 
 class MetaData(Entry):
     """
