@@ -33,6 +33,8 @@ from sword2 import *
 import sword2
 from sword2.compatible_libs import etree
 
+http = PycURL2Layer()
+
 class Sword2CnxException(Exception):
     def __init__(self, message):
         self.message = message
@@ -44,6 +46,7 @@ class Connection(sword2.Connection):
     def __init__(self, *args, **kwargs):
         if not kwargs.has_key('always_authenticate'):
             kwargs['always_authenticate'] = True
+        kwargs['http_impl'] = http
         sword2.Connection.__init__(self, *args, **kwargs)
 
 class MetaData(Entry):
