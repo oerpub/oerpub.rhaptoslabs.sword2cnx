@@ -212,3 +212,16 @@ def get_workspaces(connection):
     if len(connection.sd.workspaces) != 1:
         raise Sword2CnxException("This is not a Connexions service document.")
     return connection.sd.workspaces[0][1]
+
+def get_module_list(connection, workspace_url):
+    """
+    List all modules of a workspace. CNX specific
+
+    Inputs:
+      connection - A sword2.Connection object
+      workspace_url - A workspace URL. Example: http://cnx.org/GroupWorkspaces/wg1979/sword
+
+    Returns:
+      A XML with all workspaces
+    """
+    return connection.get_cnx_module_list(workspace_url)
